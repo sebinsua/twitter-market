@@ -14,4 +14,4 @@ Premise
    - favourites.
    - conversation replies.
 4. Many users will follow back accounts run by people that they do not know. Some for reasons of brand recognition or self-interest in follow backs, but others due to evaluation of messages, similarity to themselves, number of followers or kin selection.
-5. I wish to take a punt on kin-selection. I believe that in certain cases the "Followed By" header is used as a heuristic by people choosing whether to follow accounts. Unapologetically, I wish to game it.
+5. I wish to take a punt on peer-selection. I believe that in certain cases the "Followed By" header is used as a heuristic by people choosing whether to follow accounts. Unapologetically, I wish to game it.
