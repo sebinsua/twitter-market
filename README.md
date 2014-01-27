@@ -1,7 +1,7 @@
 twitter-market
 ==============
 
-An experiment to grow an account's twitter market and reach and then build it into a funnel.
+An experiment to grow an account's twitter market, engagement and then build this into a funnel.
 
 Premise
 -------
