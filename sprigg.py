@@ -8,44 +8,52 @@
 import json, pprint
 from twitter import Twitter, OAuth, TwitterHTTPError
 
-def load_config(file_name):
-    with open(file_name) as config_string:
-        config = json.load(config_string)
-    return config
+import operator
 
-def get_following(t):
-    # Who am I following?
-    # https://dev.twitter.com/docs/api/1.1/get/friends/list
-    following, current_cursor = [], -1
-    next_cursor_is_not_zero = True
-    while next_cursor_is_not_zero:
-        _next_following = t.friends.list(skip_status=False, cursor=current_cursor, count=200)
-        current_cursor = _next_following['next_cursor']
-        next_cursor_is_not_zero = current_cursor is not 0
-        following.extend(_next_following['users'])
+class SpriggTwitter(object):
 
-    return sorted([(f['screen_name'], f['friends_count']) for f in following], key=lambda f: f[1])
+    def __init__(self, config_path='config.json'):
+        config = self.load_config(config_path)
+        self.client = Twitter(
+            auth=OAuth(config['OAUTH_TOKEN'], config['OAUTH_SECRET'],
+                       config['CONSUMER_KEY'], config['CONSUMER_SECRET'])
+        )
 
-def get_followers(t):
-    # Who are my followers?
-    # https://dev.twitter.com/docs/api/1.1/get/followers/list
-    followers, current_cursor = [], -1
-    next_cursor_is_not_zero = True
-    while next_cursor_is_not_zero:
-        _next_followers = t.followers.list(skip_status=False, cursor=current_cursor, count=200)
-        current_cursor = _next_followers['next_cursor']
-        next_cursor_is_not_zero = current_cursor is not 0
-        followers.extend(_next_followers['users'])
+    def load_config(self, file_name):
+        with open(file_name) as config_string:
+            config = json.load(config_string)
+            return config
 
-    return sorted([(f['screen_name'], f['friends_count']) for f in followers], key=lambda f: f[1])
+    def get_following(self):
+        # Who am I following?
+        # https://dev.twitter.com/docs/api/1.1/get/friends/list
+        friends_list_api_call = self.client.friends.list
+        friends = [f for f in self.get_all(friends_list_api_call)]
+
+        return self._sort_by_friends_count(friends)
+
+    def get_followers(self):
+        # Who are my followers?
+        # https://dev.twitter.com/docs/api/1.1/get/followers/list
+        followers_list_api_call = self.client.followers.list
+        followers = [f for f in self.get_all(followers_list_api_call)]
+
+        return self._sort_by_friends_count(followers)
+
+    def get_all(self, api_call, response_key='users'):
+        current_cursor = [], -1
+        next_cursor_is_not_zero = True
+        while next_cursor_is_not_zero:
+            _next_list = api_call(skip_status=False, cursor=current_cursor, count=200)
+            current_cursor = _next_list['next_cursor']
+            next_cursor_is_not_zero = current_cursor is not 0
+            for f in _next_list[response_key]:
+                yield f
+
+    def _sort_by_friends_count(self, tweeters):
+        return sorted(tweeters, key=operator.attrgetter('friends_count'))
 
 if __name__ == "__main__":
-    config = load_config('config.json')
-    t = Twitter(
-        auth=OAuth(config['OAUTH_TOKEN'], config['OAUTH_SECRET'],
-                   config['CONSUMER_KEY'], config['CONSUMER_SECRET'])
-    )
-    print "following:"
-    pprint.pprint(get_following(t))
+    t = SpriggTwitter()
     print "followers:"
-    pprint.pprint(get_followers(t))
+    pprint.pprint(t.get_followers())
