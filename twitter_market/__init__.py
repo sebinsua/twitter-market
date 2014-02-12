@@ -11,7 +11,9 @@ from __future__ import absolute_import
 # Which people follow people that follow them. When this isn't the case, what does it mean?
 # What lists are people in?
 
-# Replies very selectively? Steal the okcupid idea.
+# What's somebody else's following/friending/connecting pattern? Is it discernable?
+
+# Replies very selectively? Steal the okcupid idea. Null-interactions and 20 Question concepts.
 
 # Person bit.ly to check engagement on every single link retweeted.
 

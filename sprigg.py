@@ -1,9 +1,4 @@
 #!/usr/bin/python
-# Do:
-# Compute: People in your twitter followers list who follow large quantity of people that follow you: X
-# Compute: People in your twitter followers list that are followed by people that follow your current followers but not yourself: Y.
-# Compute: People not in your twitter followers list who follow a large quantity of people that follow you: Z.
-# For each of these calculate useful information on their account.
 
 import json, pprint
 from twitter import Twitter, OAuth, TwitterHTTPError
@@ -24,7 +19,12 @@ class SpriggTwitter(object):
             config = json.load(config_string)
             return config
 
-    def get_following(self):
+    def get_current_account(self):
+        # What's my own account information?
+        account_details = self.client.account.verify_credentials()
+        return account_details
+
+    def get_following(self, ):
         # Who am I following?
         # https://dev.twitter.com/docs/api/1.1/get/friends/list
         friends_list_api_call = self.client.friends.list
@@ -51,10 +51,30 @@ class SpriggTwitter(object):
                 yield f
 
     def _sort_by_friends_count(self, tweeters):
-        pprint.pprint(tweeters)
         return sorted(tweeters, key=lambda d: d.get('friends_count'))
+
+def get_current_easy_to_influence_followers(t):
+    # Compute: People already in your twitter followers list who follow a large quantity of people that follow you.
+    # my_followers = t.get_followers()
+    # for follower in my_followers:
+    #   pass
+    pass
+
+def get_prospects_that_follow_current_influencable_followers(t):
+    # Compute: People not already in your twitter followers list who follow your easiest to influence followers.
+    pass
+
+def generate_table():
+    # Calculate useful information on their account.
+    pass
 
 if __name__ == "__main__":
     t = SpriggTwitter()
-    print "followers:"
-    pprint.pprint(t.get_followers())
+    current_account = t.get_current_account()
+    print "Account: " + current_account['screen_name']
+    print "Description: " + current_account['description']
+    
+    # people_likely_to_be_easier_to_influence = get_current_easy_to_influence_followers(t)
+    # prospects_connected_to_your_followers = get_prospects_that_follow_current_influencable_followers(t)
+
+
