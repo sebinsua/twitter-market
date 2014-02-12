@@ -41,7 +41,7 @@ class SpriggTwitter(object):
         return self._sort_by_friends_count(followers)
 
     def get_all(self, api_call, response_key='users'):
-        current_cursor = [], -1
+        current_cursor = -1
         next_cursor_is_not_zero = True
         while next_cursor_is_not_zero:
             _next_list = api_call(skip_status=False, cursor=current_cursor, count=200)
@@ -51,7 +51,8 @@ class SpriggTwitter(object):
                 yield f
 
     def _sort_by_friends_count(self, tweeters):
-        return sorted(tweeters, key=operator.attrgetter('friends_count'))
+        pprint.pprint(tweeters)
+        return sorted(tweeters, key=lambda d: d.get('friends_count'))
 
 if __name__ == "__main__":
     t = SpriggTwitter()
