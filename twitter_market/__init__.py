@@ -11,6 +11,8 @@ from __future__ import absolute_import
 # Which people follow people that follow them. When this isn't the case, what does it mean?
 # What lists are people in?
 
+# Replies very selectively? Steal the okcupid idea.
+
 # Person bit.ly to check engagement on every single link retweeted.
 
 # Non-automatic report creation.
@@ -18,5 +20,7 @@ from __future__ import absolute_import
 # Auto-share content.
 # Auto-favourite/retweet certain content from people with certain characteristics (location, followers, etc.)
 
-# Can the tool be expanded towards: Email communication and LinkedIn. 
+# Can the tool be expanded towards: Email communication and LinkedIn.
 # And number of people that click through to website.
+
+# see: http://www.randalolson.com/2014/01/24/a-tech-focused-guide-to-increasing-your-influence-on-twitter/
