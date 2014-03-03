@@ -1,13 +1,16 @@
 #!/usr/bin/python
+import operator
+from time import sleep
 
-import json, pprint
 from twitter import Twitter, OAuth, TwitterHTTPError
 
-import operator
+from clint.textui import puts, colored, progress, columns
+import json, pprint
 
 # @todo: Find some way of handling the stupid number of twitter API requests
 #        that I want to make.
-#        What's the progress of them? Can I log: "Part 1: prospect (count: 1/N)"
+# https://dev.twitter.com/docs/rate-limiting/1.1
+API_CALL_SLEEP_TIME = 60
 
 class SpriggTwitter(object):
 
@@ -28,7 +31,7 @@ class SpriggTwitter(object):
         account_details = self.client.account.verify_credentials()
         return account_details
 
-    def get_following(self, screen_name=None):
+    def get_following(self, **kwargs):
         # Who am I following?
         # https://dev.twitter.com/docs/api/1.1/get/friends/list
         friends_list_api_call = self.client.friends.list
@@ -36,11 +39,11 @@ class SpriggTwitter(object):
 
         return self._sort_by_friends_count(friends)
 
-    def get_followers(self):
+    def get_followers(self, **kwargs):
         # Who are my followers?
         # https://dev.twitter.com/docs/api/1.1/get/followers/list
         followers_list_api_call = self.client.followers.list
-        followers = [f for f in self.get_all(followers_list_api_call)]
+        followers = [f for f in self.get_all(followers_list_api_call, kwargs)]
 
         return self._sort_by_friends_count(followers)
 
@@ -55,7 +58,9 @@ class SpriggTwitter(object):
             }
             http_arguments.update(extra_http_arguments)
 
+            sleep(API_CALL_SLEEP_TIME)
             _next_list = api_call(**http_arguments)
+
             current_cursor = _next_list['next_cursor']
             next_cursor_is_not_zero = current_cursor is not 0
             for f in _next_list[response_key]:
@@ -70,10 +75,11 @@ def get_current_easy_to_influence_followers(t):
     # Compute: People already in your twitter followers list who follow a large quantity of people that follow you.
     my_followers = t.get_followers()
     influenceable = []
-    for follower in my_followers:
+    for follower in progress.bar(my_followers):
         follower_name = follower['screen_name']
+
         # 1. get their following list.
-        follower_is_following = t.get_following(follower_name)
+        follower_is_following = t.get_following(screen_name=follower_name)
 
         # 2. count how many of the my_followers list appear in their following list.
         # intersect two lists of dictionaries where a dict key-value is the same.
@@ -86,15 +92,6 @@ def get_current_easy_to_influence_followers(t):
             influenceable.append(influencee)
 
     return influenceable
-
-def _get_intersection_of_tweeters(a, b):
-    tweeters_intersection = []
-    # @todo: not pythonic at all!
-    for tweeter_a in a:
-      for tweeter_b in b:
-        if tweeter_a['screen_name'] == tweeter_b['screen_name']:
-          tweeters_intersection.append(tweeter_b)
-    return tweeters_intersection
 
 def get_prospects_that_follow_current_influencable_followers(t):
     MIN_TWEETERS = 1
@@ -126,23 +123,38 @@ def get_prospects_that_follow_current_influencable_followers(t):
 
     return influenceable
 
+def _get_intersection_of_tweeters(a, b):
+    tweeters_intersection = []
+    # @todo: not pythonic at all!
+    for tweeter_a in a:
+      for tweeter_b in b:
+        if tweeter_a['screen_name'] == tweeter_b['screen_name']:
+          tweeters_intersection.append(tweeter_b)
+    return tweeters_intersection
+
 def generate_table():
     # Calculate useful information on their account.
-    # @todo: https://github.com/kennethreitz/clint
     # @todo: And pandas to print the tables.
     pass
 
 if __name__ == "__main__":
     t = SpriggTwitter()
 
+    puts("Running sprigg...")
+    puts("")
+
     current_account = t.get_current_account()
-    print "Account: " + current_account['screen_name']
-    print "Description: " + current_account['description']
+
+    col_size = 20
+
+    puts(columns([colored.green('Account'), col_size], [colored.green('Description'), col_size * 2]))
+    puts(columns([current_account['screen_name'], col_size], [current_account['description'], col_size * 2]))
+
+    puts()
 
     people_likely_to_be_easier_to_influence = get_current_easy_to_influence_followers(t)
     print people_likely_to_be_easier_to_influence
 
-    prospects_connected_to_your_followers = get_prospects_that_follow_current_influencable_followers(t)
-    print prospects_connected_to_your_followers
+    # prospects_connected_to_your_followers = get_prospects_that_follow_current_influencable_followers(t)
 
     # Get some backing: https://github.com/coleifer/peewee
