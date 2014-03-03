@@ -5,6 +5,10 @@ from twitter import Twitter, OAuth, TwitterHTTPError
 
 import operator
 
+# @todo: Find some way of handling the stupid number of twitter API requests
+#        that I want to make.
+#        What's the progress of them? Can I log: "Part 1: prospect (count: 1/N)"
+
 class SpriggTwitter(object):
 
     def __init__(self, config_path='config.json'):
@@ -61,26 +65,66 @@ class SpriggTwitter(object):
         return sorted(tweeters, key=lambda d: d.get('friends_count'))
 
 def get_current_easy_to_influence_followers(t):
+    MIN_TWEETERS = 1
+
     # Compute: People already in your twitter followers list who follow a large quantity of people that follow you.
     my_followers = t.get_followers()
     influenceable = []
     for follower in my_followers:
+        follower_name = follower['screen_name']
         # 1. get their following list.
-        follower_is_following = t.get_following(follower['screen_name'])
-        # @todo: The internet is too slow here to see if this is even working...
-        # print follower_is_following
+        follower_is_following = t.get_following(follower_name)
+
         # 2. count how many of the my_followers list appear in their following list.
         # intersect two lists of dictionaries where a dict key-value is the same.
-        pass
+        intersected_tweeters = _get_intersection_of_tweeters(my_followers, follower_is_following)
+        if len(intersected_tweeters) > MIN_TWEETERS:
+            influencee = {
+              "follower_name": follower_name,
+              "intersected": [tweeter['screen_name'] for tweeter in intersected_tweeters]
+            }
+            influenceable.append(influencee)
+
     return influenceable
 
 def _get_intersection_of_tweeters(a, b):
     tweeters_intersection = []
-    pass
+    # @todo: not pythonic at all!
+    for tweeter_a in a:
+      for tweeter_b in b:
+        if tweeter_a['screen_name'] == tweeter_b['screen_name']:
+          tweeters_intersection.append(tweeter_b)
+    return tweeters_intersection
 
 def get_prospects_that_follow_current_influencable_followers(t):
+    MIN_TWEETERS = 1
     # Compute: People not already in your twitter followers list who follow your easiest to influence followers.
-    pass
+
+    my_followers = t.get_followers()
+    influenceable = []
+    for follower in my_followers:
+        follower_name = follower['screen_name']
+
+        # 1. get their followers list.
+        followers_of_follower = t.get_followers(follower_name)
+
+        for prospect in followers_of_follower:
+          prospect_name = prospect['screen_name']
+
+          # 2. get who they already follow.
+          prospect_is_following = t.get_following(prospect_name)
+
+          # 3. count how many of the my_followers list appear in the prospects following list.
+          # intersect two lists of dictionaries where a dict key-value is the same.
+          intersected_tweeters = _get_intersection_of_tweeters(my_followers, prospect_is_following)
+          if len(intersected_tweeters) > MIN_TWEETERS:
+              influencee = {
+                "follower_name": prospect_name,
+                "intersected": [tweeter['screen_name'] for tweeter in intersected_tweeters]
+              }
+              influenceable.append(influencee)
+
+    return influenceable
 
 def generate_table():
     # Calculate useful information on their account.
@@ -96,6 +140,9 @@ if __name__ == "__main__":
     print "Description: " + current_account['description']
 
     people_likely_to_be_easier_to_influence = get_current_easy_to_influence_followers(t)
-    # prospects_connected_to_your_followers = get_prospects_that_follow_current_influencable_followers(t)
+    print people_likely_to_be_easier_to_influence
 
+    prospects_connected_to_your_followers = get_prospects_that_follow_current_influencable_followers(t)
+    print prospects_connected_to_your_followers
 
+    # Get some backing: https://github.com/coleifer/peewee

@@ -25,4 +25,8 @@ from __future__ import absolute_import
 # Can the tool be expanded towards: Email communication and LinkedIn.
 # And number of people that click through to website.
 
+# Localising a global twitter market. There is a tendency for people to accidentally
+# build out markets which are US if they are in the UK, etc.
+
+# See: tacticscloud and other competitors.
 # see: http://www.randalolson.com/2014/01/24/a-tech-focused-guide-to-increasing-your-influence-on-twitter/
